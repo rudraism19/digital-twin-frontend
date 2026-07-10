@@ -1,0 +1,39 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #0F172A;
+  --color-secondary: #1E293B;
+  --color-accent: #3B82F6;
+  --color-accent-glow: rgba(59, 130, 246, 0.5);
+  --color-text-main: #F8FAFC;
+  --color-text-muted: #94A3B8;
+  --color-glass-bg: rgba(30, 41, 59, 0.7);
+  --color-glass-border: rgba(255, 255, 255, 0.1);
+}
+
+body {
+  background-color: var(--color-primary);
+  color: var(--color-text-main);
+  font-family: 'Inter', sans-serif;
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.15) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.15) 0px, transparent 50%);
+  background-attachment: fixed;
+  overscroll-behavior-y: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: pan-y;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Remove heavy backdrop-filter to prevent mobile scroll lag. Replaced with slightly more opaque bg */
+.glass-panel {
+  background: rgba(30, 41, 59, 0.85);
+  border: 1px solid var(--color-glass-border);
+  border-radius: 1rem;
+}
+
+/* Hardware accelerated scroll containers */
+.overflow-y-auto {
+  -webkit-overflow-scrolling: touch;
+  will-change: transform;
+}

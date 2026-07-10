@@ -1,0 +1,23 @@
+{
+  "name": "digital-twin-frontend",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Digital Twin Verse - frontend only (main site + parent dashboard), backend/database removed",
+  "workspaces": [
+    "main-site",
+    "parent-ui"
+  ],
+  "scripts": {
+    "dev": "concurrently -n MAIN,PARENT -c blue,green \"npm run dev -w main-site\" \"npm run dev -w parent-ui\"",
+    "dev:main": "npm run dev -w main-site",
+    "dev:parent": "npm run dev -w parent-ui",
+    "build": "npm run build -w main-site && npm run build -w parent-ui",
+    "build:main": "npm run build -w main-site",
+    "build:parent": "npm run build -w parent-ui",
+    "preview:main": "npm run preview -w main-site",
+    "preview:parent": "npm run preview -w parent-ui"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0"
+  }
+}
