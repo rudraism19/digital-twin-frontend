@@ -3625,10 +3625,16 @@
 
         /* ═══ PAGES ══════════════════════════════════════════════════ */
         function goHome() {
+            var path = window.location.pathname;
+            if (path !== '/' && path !== '/index.html' && path !== '/index') {
+                window.location.href = '/index.html';
+                return;
+            }
             document.querySelectorAll('.page').forEach(function(p) {
                 p.classList.remove('active');
             });
-            document.getElementById('page-main').classList.add('active');
+            var main = document.getElementById('page-main');
+            if (main) main.classList.add('active');
             window.scrollTo({
                 top: 0,
                 behavior: 'smooth'
@@ -4388,16 +4394,15 @@
         };
 
         function openPricingPage() {
-            var modal = document.getElementById('pricing-modal');
-            if (modal) {
-                modal.style.display = 'flex';
-            }
+            window.location.href = '/pricing.html';
         }
 
         function closePricingPage() {
-            var modal = document.getElementById('pricing-modal');
-            if (modal) {
-                modal.style.display = 'none';
+            if (window.location.pathname === '/pricing.html' || window.location.pathname === '/pricing') {
+                window.location.href = '/index.html';
+            } else {
+                var modal = document.getElementById('pricing-modal');
+                if (modal) modal.style.display = 'none';
             }
         }
 
