@@ -7,7 +7,13 @@ export default defineConfig({
   server: {
     host: true,
     port: 5173,
-    strictPort: true
+    strictPort: true,
+    proxy: {
+      '/parent': {
+        target: 'http://localhost:5174',
+        changeOrigin: true
+      }
+    }
   },
   build: {
     outDir: 'dist',
@@ -20,7 +26,8 @@ export default defineConfig({
         explorer: resolve(__dirname, 'explorer.html'),
         advisor: resolve(__dirname, 'advisor.html'),
         reviews: resolve(__dirname, 'reviews.html'),
-        pricing: resolve(__dirname, 'pricing.html')
+        pricing: resolve(__dirname, 'pricing.html'),
+        login: resolve(__dirname, 'login.html')
       }
     }
   }

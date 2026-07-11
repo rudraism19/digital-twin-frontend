@@ -1,23 +1,23 @@
-document.addEventListener("DOMContentLoaded", () => {
+// Optimized UX Engine with support for dynamic page transitions
+window.initUXEngine = function() {
     const isMobile = window.innerWidth <= 768 || 'ontouchstart' in window;
 
-    // --- 1. Custom Interactive Cursor ---
+    // --- 1. Custom Interactive Cursor (One-time init) ---
     const cursor = document.getElementById("cursor");
     const cursorRing = document.getElementById("cursor-ring");
     
-    if (cursor && cursorRing && window.matchMedia("(pointer: fine)").matches) {
+    if (cursor && cursorRing && window.matchMedia("(pointer: fine)").matches && !window.cursorBound) {
+        window.cursorBound = true;
         let mouseX = window.innerWidth / 2;
         let mouseY = window.innerHeight / 2;
         let ringX = mouseX;
         let ringY = mouseY;
         
-        // Smooth follow for the ring
         const speed = 0.15;
         
         document.addEventListener("mousemove", (e) => {
             mouseX = e.clientX;
             mouseY = e.clientY;
-            // Update center dot instantly using CSS variables
             cursor.style.setProperty('--x', `${mouseX}px`);
             cursor.style.setProperty('--y', `${mouseY}px`);
         });
@@ -31,24 +31,24 @@ document.addEventListener("DOMContentLoaded", () => {
         };
         animateCursor();
         
-        // Hover states
-        const interactiveElements = document.querySelectorAll('a, button, input, .btn-amb, .btn-out, .feat-card, .auth-card');
-        interactiveElements.forEach(el => {
-            el.addEventListener("mouseenter", () => document.body.classList.add("hovering"));
-            el.addEventListener("mouseleave", () => document.body.classList.remove("hovering"));
+        // Use event delegation for cursor hover states to support dynamic page loads
+        document.addEventListener("mouseover", (e) => {
+            if (e.target && e.target.closest && e.target.closest('a, button, input, .btn-amb, .btn-out, .feat-card, .auth-card')) {
+                document.body.classList.add("hovering");
+            } else {
+                document.body.classList.remove("hovering");
+            }
         });
     }
 
-    // --- 2. tsParticles Neural Network Background ---
-    if (typeof tsParticles !== 'undefined' && !isMobile) {
+    // --- 2. tsParticles Background (One-time init) ---
+    if (typeof tsParticles !== 'undefined' && !isMobile && !window.particlesLoaded) {
+        window.particlesLoaded = true;
         tsParticles.load("tsparticles", {
             fpsLimit: 60,
             interactivity: {
                 events: {
-                    onHover: {
-                        enable: !isMobile, // Disable grab mode on mobile for performance
-                        mode: "grab", 
-                    },
+                    onHover: { enable: !isMobile, mode: "grab" },
                 },
                 modes: {
                     grab: { distance: 140, links: { opacity: 0.5 } }
@@ -59,7 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 links: {
                     color: "#7b2fff",
                     distance: 150,
-                    enable: !isMobile, // EXTREME PERFORMANCE HACK: Lines kill mobile GPUs. Disable them.
+                    enable: !isMobile,
                     opacity: 0.2,
                     width: 1,
                 },
@@ -82,8 +82,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // --- 3. Hacker Text Decoding Effect ---
     const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*";
-    
-    function decodeText(element) {
+    window.decodeText = function(element) {
         if(element.dataset.decoded === "true") return;
         const originalText = element.innerText;
         element.dataset.original = originalText;
@@ -105,17 +104,15 @@ document.addEventListener("DOMContentLoaded", () => {
             }
             iterations += 1/3;
         }, 30);
-    }
+    };
 
-    // --- 4. GSAP Cinematic Scroll Animations ---
+    // --- 4. GSAP Card Reveal Animations ---
     if (!isMobile && typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
         gsap.registerPlugin(ScrollTrigger);
-
-        // Decode headers removed to preserve HTML structure (<br>, <span>)
-
-        // Cinematic card reveal
         const cards = document.querySelectorAll(".feat-card, .step-card, .info-card");
-        cards.forEach((card, index) => {
+        cards.forEach((card) => {
+            if (card.dataset.revealInit) return;
+            card.dataset.revealInit = "true";
             gsap.fromTo(card, 
                 { opacity: 0, y: 50, scale: 0.95 },
                 { 
@@ -138,6 +135,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!isMobile) {
         const spotlightCards = document.querySelectorAll('.feat-card, .auth-card, .dash-card, .glass-panel, .info-card, .step-card');
         spotlightCards.forEach(card => {
+            if (card.dataset.spotlightInit) return;
+            card.dataset.spotlightInit = "true";
             card.addEventListener('mousemove', (e) => {
                 const rect = card.getBoundingClientRect();
                 const x = e.clientX - rect.left;
@@ -147,9 +146,11 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         });
         
-        // --- 6. Magnetic Elements (Buttons only — logo & nav excluded to keep them stable) ---
+        // --- 6. Magnetic Elements ---
         const magneticBtns = document.querySelectorAll('.btn-amb, .btn-out');
         magneticBtns.forEach(btn => {
+            if (btn.dataset.magneticInit) return;
+            btn.dataset.magneticInit = "true";
             btn.addEventListener('mousemove', (e) => {
                 if (typeof gsap === 'undefined') return;
                 const rect = btn.getBoundingClientRect();
@@ -165,19 +166,18 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // --- 7. Magnetic Cards (Subtle Lean & 3D Tilt) ---
-    // Restored 3D tilt! Hardware acceleration in CSS makes this smooth now.
     const magneticCards = document.querySelectorAll('.feat-card, .auth-card, .dash-card, .glass-panel, .info-card, .step-card, .analyzer-card');
     magneticCards.forEach(card => {
+        if (card.dataset.tiltInit) return;
+        card.dataset.tiltInit = "true";
         const isAnalyzer = card.classList.contains('analyzer-card');
         
         card.addEventListener('mousemove', (e) => {
-            if (typeof gsap === 'undefined' || ('ontouchstart' in window)) return; // Skip mousemove on touch devices
+            if (typeof gsap === 'undefined' || ('ontouchstart' in window)) return;
             const rect = card.getBoundingClientRect();
             const x = e.clientX - rect.left - rect.width / 2;
             const y = e.clientY - rect.top - rect.height / 2;
             
-            // Cards move very slightly and rotate in 3D for a premium feel
-            // The analyzer card gets a slightly stronger effect to make the translateZ pop
             const mult = isAnalyzer ? 0.08 : 0.035;
             const moveMult = isAnalyzer ? 0.02 : 0.05;
             
@@ -205,94 +205,57 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // --- 8. Mobile Gyroscope 3D Tilt (DISABLED FOR PERFORMANCE) ---
-    // Disabled window.addEventListener('deviceorientation') to prevent 60Hz GSAP tween spam 
-    // and eliminate style recalculation storm against mobile CSS !important rules.
-    if (window.DeviceOrientationEvent && ('ontouchstart' in window)) {
-        // Gyroscope tilt disabled to ensure smooth mobile scrolling without jank or freezing.
-    }
+    // --- 8. Deployment Version Checking (One-time init) ---
+    if (!window.versionChecked) {
+        window.versionChecked = true;
+        let currentVersion = null;
 
-    // --- 9. Deployment Version Checking ---
-    let currentVersion = null;
-    let versionCheckInterval = null;
-
-    async function checkDeploymentVersion() {
-        try {
-            const response = await fetch('/api/version', { cache: 'no-store' });
-            if (response.ok) {
-                const data = await response.json();
-                if (!currentVersion) {
-                    currentVersion = data.version;
-                } else if (currentVersion !== data.version) {
-                    console.log(`New deployment detected: ${currentVersion} -> ${data.version}. Reloading...`);
-                    // Trigger service worker update if exists
-                    if ('serviceWorker' in navigator) {
-                        navigator.serviceWorker.getRegistration().then(reg => {
-                            if (reg && reg.waiting) {
-                                reg.waiting.postMessage('SKIP_WAITING');
-                            }
-                            console.log('Update available. Reload manually.');
-                            // window.location.reload(true);
-                        });
-                    } else {
-                        console.log('Update available. Reload manually.');
-                        // window.location.reload(true);
+        async function checkDeploymentVersion() {
+            try {
+                const response = await fetch('/api/version', { cache: 'no-store' });
+                if (response.ok) {
+                    const data = await response.json();
+                    if (!currentVersion) {
+                        currentVersion = data.version;
+                    } else if (currentVersion !== data.version) {
+                        console.log(`New deployment detected: ${currentVersion} -> ${data.version}. Reloading...`);
+                        if ('serviceWorker' in navigator) {
+                            navigator.serviceWorker.getRegistration().then(reg => {
+                                if (reg && reg.waiting) {
+                                    reg.waiting.postMessage('SKIP_WAITING');
+                                }
+                            });
+                        }
                     }
                 }
+            } catch (e) {
+                console.warn('Failed to check deployment version', e);
             }
-        } catch (e) {
-            console.warn('Failed to check deployment version', e);
         }
-    }
 
-    // Initial check and interval
-    checkDeploymentVersion();
-    versionCheckInterval = setInterval(checkDeploymentVersion, 5 * 60 * 1000); // Check every 5 minutes
+        checkDeploymentVersion();
+        setInterval(checkDeploymentVersion, 5 * 60 * 1000);
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                checkDeploymentVersion();
+            }
+        });
 
-    // Check immediately when user returns to the tab
-    document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible') {
-            checkDeploymentVersion();
-        }
-    });
-
-    // Handle Service Worker Registration
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            // Use ?v=killswitch to forcefully bypass aggressive 24-hour browser cache on mobile devices like Motorola
-            navigator.serviceWorker.register('/service-worker.js?v=killswitch', { updateViaCache: 'none' }).then(reg => {
-                reg.addEventListener('updatefound', () => {
-                    const newWorker = reg.installing;
-                    newWorker.addEventListener('statechange', () => {
-                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            // A new service worker is available, force version check
-                            checkDeploymentVersion();
-                        }
-                    });
-                });
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js?v=killswitch', { updateViaCache: 'none' });
             });
-        });
-        
-        let refreshing = false;
-        navigator.serviceWorker.addEventListener('controllerchange', () => {
-            if (!refreshing) {
-                refreshing = true;
-                console.log('Service worker updated. Reload prevented to stop infinite loops.');
-                // window.location.reload(true);
-            }
-        });
+        }
     }
 
-    // --- 10. Premium Splash Screen Logic ---
+    // --- 9. Premium Splash Screen Logic ---
     const splashScreen = document.getElementById('splash-screen');
     if (splashScreen) {
-        // Ensure minimum 300ms of splash screen for premium feel, but set a maximum safety timeout (800ms) so it never hangs due to ad-blockers or slow external assets
         const minTime = new Promise(resolve => setTimeout(resolve, 300));
         const winLoad = new Promise(resolve => {
             if (document.readyState === 'complete') resolve();
             else {
                 window.addEventListener('load', resolve);
-                // Fallback safety timeout in case external third-party scripts (GTM, Analytics, Unsplash) hang or get blocked
                 setTimeout(resolve, 800);
             }
         });
@@ -301,16 +264,17 @@ document.addEventListener("DOMContentLoaded", () => {
             splashScreen.classList.add('hidden');
             setTimeout(() => {
                 splashScreen.remove();
-                // Optionally decode the main hero text after splash screen vanishes
                 const heroTitle = document.querySelector('.auth-hero h1');
                 if(heroTitle && typeof decodeText === 'function') decodeText(heroTitle);
-            }, 800); // matches CSS transition duration
+            }, 800);
         });
     }
-});
+};
 
+// Auto-run on DOMContentLoaded
+document.addEventListener("DOMContentLoaded", window.initUXEngine);
 
-// Footer scroll space guard to prevent empty space below footer
+// Footer space guard
 window.addEventListener('load', () => {
     const footer = document.querySelector('footer');
     if (!footer) return;
@@ -324,8 +288,6 @@ window.addEventListener('load', () => {
             if (style.display !== 'none' && style.position !== 'fixed') {
                 const rect = el.getBoundingClientRect();
                 const elBottom = rect.bottom + window.scrollY;
-                
-                // If it's rendering below the footer, hide it to prevent scroll stretch
                 if (elBottom > footerBottom + 50) {
                     el.style.display = 'none';
                     el.style.opacity = '0';
@@ -335,7 +297,6 @@ window.addEventListener('load', () => {
         });
     };
 
-    // Run aggressively for 3 seconds after load to catch any lazy-loaded injected elements without visual delay
     let frames = 0;
     const runAggressive = () => {
         cleanup();
@@ -343,6 +304,5 @@ window.addEventListener('load', () => {
         if (frames < 180) requestAnimationFrame(runAggressive);
     };
     runAggressive();
-    
     window.addEventListener('resize', cleanup);
 });

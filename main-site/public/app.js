@@ -3627,7 +3627,11 @@
         function goHome() {
             var path = window.location.pathname;
             if (path !== '/' && path !== '/index.html' && path !== '/index') {
-                window.location.href = '/index.html';
+                if (typeof window.navigateToPage === 'function') {
+                    window.navigateToPage('/index.html');
+                } else {
+                    window.location.href = '/index.html';
+                }
                 return;
             }
             document.querySelectorAll('.page').forEach(function(p) {
@@ -4394,12 +4398,20 @@
         };
 
         function openPricingPage() {
-            window.location.href = '/pricing.html';
+            if (typeof window.navigateToPage === 'function') {
+                window.navigateToPage('/pricing.html');
+            } else {
+                window.location.href = '/pricing.html';
+            }
         }
 
         function closePricingPage() {
             if (window.location.pathname === '/pricing.html' || window.location.pathname === '/pricing') {
-                window.location.href = '/index.html';
+                if (typeof window.navigateToPage === 'function') {
+                    window.navigateToPage('/index.html');
+                } else {
+                    window.location.href = '/index.html';
+                }
             } else {
                 var modal = document.getElementById('pricing-modal');
                 if (modal) modal.style.display = 'none';
@@ -4672,66 +4684,24 @@
         }
 
         function openSignupPage() {
-            var auth = document.getElementById('page-auth');
-            if (auth) auth.classList.remove('active');
-            var signup = document.getElementById('page-signup');
-            if (signup) signup.classList.add('active');
-            var otp = document.getElementById('page-otp');
-            if (otp) otp.classList.remove('active');
-            
-            var fp = document.getElementById('page-forgot-pw');
-            if (fp) fp.classList.remove('active');
-            var rp = document.getElementById('page-reset-pw');
-            if (rp) rp.classList.remove('active');
-            
-            var name = document.getElementById('su-n');
-            if (name) {
-                setTimeout(function() {
-                    name.focus();
-                }, 50);
-            }
+            window.location.href = '/login.html?view=signup';
         }
 
         function openLoginPage() {
-            var auth = document.getElementById('page-auth');
-            if (auth) auth.classList.add('active');
-            var signup = document.getElementById('page-signup');
-            if (signup) signup.classList.remove('active');
-            var otp = document.getElementById('page-otp');
-            if (otp) otp.classList.remove('active');
-            
-            var fp = document.getElementById('page-forgot-pw');
-            if (fp) fp.classList.remove('active');
-            var rp = document.getElementById('page-reset-pw');
-            if (rp) rp.classList.remove('active');
+            window.location.href = '/login.html?view=signin';
         }
 
         function openForgotPasswordPage() {
-            var auth = document.getElementById('page-auth');
-            if (auth) auth.classList.remove('active');
-            var signup = document.getElementById('page-signup');
-            if (signup) signup.classList.remove('active');
-            var fp = document.getElementById('page-forgot-pw');
-            if (fp) fp.classList.add('active');
-            var rp = document.getElementById('page-reset-pw');
-            if (rp) rp.classList.remove('active');
+            window.location.href = '/login.html?view=forgot';
         }
 
         function openResetPasswordPage() {
-            var auth = document.getElementById('page-auth');
-            if (auth) auth.classList.remove('active');
-            var signup = document.getElementById('page-signup');
-            if (signup) signup.classList.remove('active');
-            var fp = document.getElementById('page-forgot-pw');
-            if (fp) fp.classList.remove('active');
-            var rp = document.getElementById('page-reset-pw');
-            if (rp) rp.classList.add('active');
+            window.location.href = '/login.html?view=signin';
         }
 
         function openLoginGate() {
-            lockSite();
             closeMod();
-            openAuthPage();
+            window.location.href = '/login.html?view=signin';
         }
 
         async function doLogout() {
@@ -5499,13 +5469,115 @@
             initAccessGate();
             scheduleDeferredStartup();
 
-            var chatInput = document.getElementById('cp-inp');
-            if (chatInput) {
-                chatInput.addEventListener('keydown', function(event) {
-                    if (event.key === 'Enter') {
-                        event.preventDefault();
-                        sendMsg();
+            // Event delegation for Chat Input Enter keypress
+            document.addEventListener('keydown', function(event) {
+                if (event.target && event.target.id === 'cp-inp' && event.key === 'Enter') {
+                    event.preventDefault();
+                    sendMsg();
+                }
+            });
+        });
+
+        // ═══ LIGHTWEIGHT SPA ROUTER FOR INSTANT AND SMOOTH TRANSITIONS ═══
+        (function() {
+            // Intercept internal HTML page navigations
+            document.addEventListener('click', function(e) {
+                var link = e.target.closest('a');
+                if (!link) return;
+                
+                var href = link.getAttribute('href');
+                if (!href || href.startsWith('#') || href.startsWith('http') || href.startsWith('javascript:')) return;
+                if (link.getAttribute('onclick')) return;
+                if (link.getAttribute('target') === '_blank') return;
+
+                // Parent Portal routing goes to server directly, skip intercept
+                if (href.startsWith('/parent')) return;
+
+                e.preventDefault();
+                window.navigateToPage(href);
+            });
+
+            window.addEventListener('popstate', function() {
+                loadPageContent(window.location.pathname, false);
+            });
+
+            window.navigateToPage = function(url) {
+                history.pushState(null, '', url);
+                loadPageContent(url, true);
+            };
+
+            function loadPageContent(url, scrollToTop) {
+                var main = document.getElementById('page-main');
+                if (!main) return;
+
+                // Smooth fade transition
+                main.style.transition = 'opacity 0.18s ease-out';
+                main.style.opacity = '0';
+
+                fetch(url)
+                    .then(function(res) {
+                        if (!res.ok) throw new Error('Network error');
+                        return res.text();
+                    })
+                    .then(function(html) {
+                        var parser = new DOMParser();
+                        var doc = parser.parseFromString(html, 'text/html');
+
+                        // Update Page Title
+                        var newTitle = doc.querySelector('title');
+                        if (newTitle) document.title = newTitle.textContent;
+
+                        // Swap content
+                        var newMain = doc.getElementById('page-main');
+                        if (newMain) {
+                            main.innerHTML = newMain.innerHTML;
+                            main.className = newMain.className;
+                        }
+
+                        // Update active state in nav menu
+                        updateActiveNavLinks();
+
+                        // Scroll to top instantly before fade in
+                        if (scrollToTop) {
+                            window.scrollTo({ top: 0, behavior: 'instant' });
+                        }
+
+                        // Fade in content
+                        setTimeout(function() {
+                            main.style.opacity = '1';
+                        }, 50);
+
+                        // Re-trigger scroll reveal animations and tilts
+                        if (typeof window.initUXEngine === 'function') {
+                            window.initUXEngine();
+                        }
+
+                        // Reinitialize Career Explorer dashboard if search is present on the page
+                        if (document.getElementById('search-inp') && typeof renderCareers === 'function') {
+                            if (window.CAREERS && window.CAREERS.length > 0) {
+                                renderCareers();
+                            } else {
+                                loadCareersData().then(renderCareers);
+                            }
+                        }
+                    })
+                    .catch(function(err) {
+                        console.error('AJAX navigation failed. Falling back to default reload.', err);
+                        window.location.href = url;
+                    });
+            }
+
+            function updateActiveNavLinks() {
+                var path = window.location.pathname;
+                var navLinks = document.querySelectorAll('.nav-ul a, .mob a');
+                navLinks.forEach(function(link) {
+                    link.classList.remove('active');
+                    var href = link.getAttribute('href');
+                    if (href) {
+                        if (path.endsWith(href) || (path === '/' && href === '/index.html') || (path.endsWith('/') && href === '/index.html')) {
+                            link.classList.add('active');
+                        }
                     }
                 });
             }
-        });
+        })();

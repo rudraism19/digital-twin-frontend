@@ -497,13 +497,6 @@
 </head>
 
 <body>
-    <script>
-        if (sessionStorage.getItem('dtv_splash_shown')) {
-            document.write('<style>#splash-screen { display: none !important; }</style>');
-        } else {
-            sessionStorage.setItem('dtv_splash_shown', 'true');
-        }
-    </script>
     <!-- PREMIUM SPLASH SCREEN -->
     <div id="splash-screen">
         <div class="splash-logo">
@@ -548,12 +541,13 @@
             </div>
         </div>
         <ul class="nav-ul">
+            <li><a href="/index.html">Home</a></li>
             <li><a href="/how.html">How It Works</a></li>
             <li><a href="/dashboard.html" onclick="requirePremiumFrontend(function(){ window.location.href='/dashboard.html'; }); return false;">Personalised
                     Dashboard</a></li>
             <li><a href="/explorer.html">Career Explorer</a></li>
             <li><a href="/advisor.html">AI Advisor</a></li>
-            <li><a href="/parent">Parent Portal</a></li>
+            <li><a href="/parent/">Parent Portal</a></li>
             <li><a href="/reviews.html">Reviews</a></li>
             <li><button type="button" onclick="window.location.href='/pricing.html'; return false;" class="nav-pill">💎 Go
                     Premium</button>
@@ -583,6 +577,7 @@
         <div class="hbg" id="hbg" onclick="togMenu()"><span></span><span></span><span></span></div>
     </nav>
     <div class="mob" id="mob">
+        <a href="/index.html" onclick="togMenu()">Home</a>
 
         <button type="button" id="mob-signin" onclick="openLoginGate(); togMenu()" class="btn-reset">Sign In</button>
         <button type="button" id="mob-signup" onclick="openLoginGate(); togMenu()" class="btn-reset">Sign Up</button>
@@ -596,7 +591,7 @@
         <a href="/how.html" onclick="togMenu()">How It Works</a>
         <a href="/explorer.html" onclick="togMenu()">Career Explorer</a>
         <a href="/advisor.html" onclick="togMenu()">AI Advisor</a>
-        <a href="/parent" style="color: #a78bfa; font-weight: 600;" onclick="togMenu()">Parent Portal</a>
+        <a href="/parent/" style="color: #a78bfa; font-weight: 600;" onclick="togMenu()">Parent Portal</a>
         <a href="/reviews.html" onclick="togMenu()">Reviews</a>
         <button type="button" onclick="window.location.href='/pricing.html'; return false;"
             class="btn-reset"
