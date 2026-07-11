@@ -5848,3 +5848,35 @@ footer {
     }
 }
 
+
+/* ACTIVE NAV LINK STYLING WITH PULSING UNDERLINE & GLOW */
+.nav-ul a.active, .mob a.active {
+    color: var(--wh) !important;
+    background: rgba(255, 255, 255, .08) !important;
+    box-shadow: 
+        inset 0 1px 0 rgba(255, 255, 255, .2),
+        0 0 15px rgba(55, 215, 255, 0.25) !important;
+    position: relative;
+}
+.nav-ul a.active::after, .mob a.active::after {
+    content: '';
+    position: absolute;
+    bottom: 2px;
+    left: 15%;
+    right: 15%;
+    height: 2px;
+    background: linear-gradient(90deg, var(--amb), var(--cyan));
+    border-radius: 99px;
+    box-shadow: 0 0 8px var(--cyan);
+    animation: activeNavPulse 2s infinite alternate;
+}
+@keyframes activeNavPulse {
+    0% {
+        opacity: 0.6;
+        filter: brightness(0.9);
+    }
+    100% {
+        opacity: 1;
+        filter: brightness(1.2);
+    }
+}

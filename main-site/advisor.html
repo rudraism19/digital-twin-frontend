@@ -497,6 +497,13 @@
 </head>
 
 <body>
+    <script>
+        if (sessionStorage.getItem('dtv_splash_shown')) {
+            document.write('<style>#splash-screen { display: none !important; }</style>');
+        } else {
+            sessionStorage.setItem('dtv_splash_shown', 'true');
+        }
+    </script>
     <!-- PREMIUM SPLASH SCREEN -->
     <div id="splash-screen">
         <div class="splash-logo">

@@ -5481,6 +5481,17 @@
 
         /* ═══ INIT ═══════════════════════════════════════════════════ */
         document.addEventListener('DOMContentLoaded', function() {
+            // Set active class on navbar links corresponding to current path
+            var path = window.location.pathname;
+            var navLinks = document.querySelectorAll('.nav-ul a, .mob a');
+            navLinks.forEach(function(link) {
+                var href = link.getAttribute('href');
+                if (href) {
+                    if (path.endsWith(href) || (path === '/' && href === '/index.html') || (path.endsWith('/') && href === '/index.html')) {
+                        link.classList.add('active');
+                    }
+                }
+            });
             initGoogleAnalytics();
             loadData();
             ensureStudentDefaults();
