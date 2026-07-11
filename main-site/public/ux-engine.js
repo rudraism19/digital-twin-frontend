@@ -44,40 +44,47 @@ window.initUXEngine = function() {
     // --- 2. tsParticles Background (One-time init) ---
     if (typeof tsParticles !== 'undefined' && !isMobile && !window.particlesLoaded) {
         window.particlesLoaded = true;
-        tsParticles.load("tsparticles", {
-            fpsLimit: 60,
-            interactivity: {
-                events: {
-                    onHover: { enable: !isMobile, mode: "grab" },
+        const initParticles = () => {
+            tsParticles.load("tsparticles", {
+                fpsLimit: 60,
+                interactivity: {
+                    events: {
+                        onHover: { enable: !isMobile, mode: "grab" },
+                    },
+                    modes: {
+                        grab: { distance: 140, links: { opacity: 0.5 } }
+                    },
                 },
-                modes: {
-                    grab: { distance: 140, links: { opacity: 0.5 } }
+                particles: {
+                    color: { value: "#37d7ff" },
+                    links: {
+                        color: "#7b2fff",
+                        distance: 150,
+                        enable: !isMobile,
+                        opacity: 0.2,
+                        width: 1,
+                    },
+                    move: {
+                        enable: true,
+                        speed: 0.5,
+                        direction: "none",
+                        random: false,
+                        straight: false,
+                        outModes: { default: "bounce" },
+                    },
+                    number: { value: isMobile ? 15 : 35, density: { enable: true, area: 800 } },
+                    opacity: { value: 0.3 },
+                    shape: { type: "circle" },
+                    size: { value: { min: 1, max: 2 } },
                 },
-            },
-            particles: {
-                color: { value: "#37d7ff" },
-                links: {
-                    color: "#7b2fff",
-                    distance: 150,
-                    enable: !isMobile,
-                    opacity: 0.2,
-                    width: 1,
-                },
-                move: {
-                    enable: true,
-                    speed: 0.5,
-                    direction: "none",
-                    random: false,
-                    straight: false,
-                    outModes: { default: "bounce" },
-                },
-                number: { value: isMobile ? 15 : 35, density: { enable: true, area: 800 } },
-                opacity: { value: 0.3 },
-                shape: { type: "circle" },
-                size: { value: { min: 1, max: 2 } },
-            },
-            detectRetina: true,
-        });
+                detectRetina: true,
+            });
+        };
+        if (window.requestIdleCallback) {
+            window.requestIdleCallback(() => setTimeout(initParticles, 1200));
+        } else {
+            setTimeout(initParticles, 2000);
+        }
     }
 
     // --- 3. Hacker Text Decoding Effect ---
@@ -109,6 +116,9 @@ window.initUXEngine = function() {
     // --- 4. GSAP Card Reveal Animations ---
     if (!isMobile && typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
         gsap.registerPlugin(ScrollTrigger);
+        try {
+            ScrollTrigger.getAll().forEach(t => t.kill()); // Clear stale triggers to prevent lag
+        } catch(e) {}
         const cards = document.querySelectorAll(".feat-card, .step-card, .info-card");
         cards.forEach((card) => {
             if (card.dataset.revealInit) return;

@@ -23,7 +23,7 @@
             --red: #ef4444;
             --wh: #e8f0f8;
             --wh2: #c2d0e0;
-            --mu: #7a8fa8;
+            --mu: #9fb3c8;
             --card: rgba(255, 255, 255, .04);
             --bdr: rgba(255, 255, 255, .07);
             --r: 14px;
@@ -506,7 +506,10 @@
             list-style: none;
             display: flex;
             align-items: center;
-            gap: 0.65rem; /* Reduced gap to prevent overlap */
+            flex-grow: 1;
+            justify-content: space-evenly;
+            margin-left: 2.5rem;
+            max-width: 1050px;
         }
 
         .nav-ul a {
@@ -5882,8 +5885,11 @@ footer {
 }
 
 /* RESPONSIVE TABLET BREAKPOINT TO PREVENT NAVBAR OVERLAP */
-@media (max-width: 1150px) and (min-width: 601px) {
+@media (max-width: 1280px) and (min-width: 601px) {
     .nav-ul {
+        flex-grow: 0 !important;
+        justify-content: flex-end !important;
+        margin-left: auto !important;
         gap: 0.35rem !important;
     }
     .nav-ul a {

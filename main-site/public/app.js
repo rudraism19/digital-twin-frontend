@@ -3249,7 +3249,12 @@
             var msgs = document.getElementById('cp-msgs');
             var div = document.createElement('div');
             div.className = 'msg bot';
-            div.innerHTML = DOMPurify.sanitize(formatBotMessage(text));
+            var cleanHtml = formatBotMessage(text);
+            if (window.DOMPurify) {
+                div.innerHTML = window.DOMPurify.sanitize(cleanHtml);
+            } else {
+                div.innerHTML = cleanHtml;
+            }
             msgs.appendChild(div);
             
             // Premium Upgrade: Apply hacker decode effect
@@ -3280,7 +3285,12 @@
             var div = document.createElement('div');
             div.className = 'msg typing';
             div.id = 'typing-ind';
-            div.innerHTML = DOMPurify.sanitize('<div class="typing-dots" style="display:flex; align-items:center;"><span class="dot"></span><span class="dot"></span><span class="dot"></span> <span class="decrypt-text" style="margin-left:12px; font-size:0.75rem; color:var(--cyan); letter-spacing:2px; font-family:monospace; white-space:nowrap;">DECRYPTING_</span></div>', { ADD_ATTR: ['style'] });
+            var typingHtml = '<div class="typing-dots" style="display:flex; align-items:center;"><span class="dot"></span><span class="dot"></span><span class="dot"></span> <span class="decrypt-text" style="margin-left:12px; font-size:0.75rem; color:var(--cyan); letter-spacing:2px; font-family:monospace; white-space:nowrap;">DECRYPTING_</span></div>';
+            if (window.DOMPurify) {
+                div.innerHTML = window.DOMPurify.sanitize(typingHtml, { ADD_ATTR: ['style'] });
+            } else {
+                div.innerHTML = typingHtml;
+            }
             msgs.appendChild(div);
             msgs.scrollTop = msgs.scrollHeight;
             
@@ -4121,6 +4131,27 @@
             var email = (APP_DATA.userData && APP_DATA.userData.email) ? APP_DATA.userData.email.trim() : '';
             if (email) return email.charAt(0).toUpperCase();
             return 'DT';
+        }
+
+        var domPurifyLoadPromise = null;
+        function ensureDOMPurifyLoaded() {
+            if (window.DOMPurify) return Promise.resolve(window.DOMPurify);
+            if (!domPurifyLoadPromise) {
+                domPurifyLoadPromise = new Promise(function(resolve, reject) {
+                    var script = document.createElement('script');
+                    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js';
+                    script.async = true;
+                    script.onload = function() {
+                        if (window.DOMPurify) resolve(window.DOMPurify);
+                        else reject(new Error('DOMPurify failed to initialize'));
+                    };
+                    script.onerror = function() {
+                        reject(new Error('DOMPurify load failed'));
+                    };
+                    document.head.appendChild(script);
+                });
+            }
+            return domPurifyLoadPromise;
         }
 
         var jsPdfLoadPromise = null;
@@ -5462,11 +5493,18 @@
                     }
                 }
             });
-            initGoogleAnalytics();
+            if (window.requestIdleCallback) {
+                window.requestIdleCallback(function() { setTimeout(initGoogleAnalytics, 2000); });
+            } else {
+                setTimeout(initGoogleAnalytics, 2500);
+            }
             loadData();
             ensureStudentDefaults();
             ensureAuthDefaults();
             initAccessGate();
+            if (document.getElementById('ai-advisor')) {
+                ensureDOMPurifyLoaded();
+            }
             scheduleDeferredStartup();
 
             // Event delegation for Chat Input Enter keypress
@@ -5501,6 +5539,26 @@
                 loadPageContent(window.location.pathname, false);
             });
 
+            // Single Page Application caching to load pages instantly (0ms network request)
+            var PAGE_CACHE = {};
+
+            // Prefetch other subpages in the background
+            function prefetchSubpages() {
+                var prefetchPages = ['/index.html', '/features.html', '/advisor.html', '/reviews.html', '/pricing.html'];
+                prefetchPages.forEach(function(url) {
+                    if (window.location.pathname.endsWith(url)) return;
+                    fetch(url)
+                        .then(function(res) { if (res.ok) return res.text(); })
+                        .then(function(html) { if (html) PAGE_CACHE[url] = html; })
+                        .catch(function() {});
+                });
+            }
+            if (window.requestIdleCallback) {
+                window.requestIdleCallback(prefetchSubpages);
+            } else {
+                setTimeout(prefetchSubpages, 1500);
+            }
+
             window.navigateToPage = function(url) {
                 history.pushState(null, '', url);
                 loadPageContent(url, true);
@@ -5514,57 +5572,86 @@
                 main.style.transition = 'opacity 0.18s ease-out';
                 main.style.opacity = '0';
 
-                fetch(url)
-                    .then(function(res) {
-                        if (!res.ok) throw new Error('Network error');
-                        return res.text();
-                    })
-                    .then(function(html) {
-                        var parser = new DOMParser();
-                        var doc = parser.parseFromString(html, 'text/html');
+                function renderContent(html) {
+                    var parser = new DOMParser();
+                    var doc = parser.parseFromString(html, 'text/html');
 
-                        // Update Page Title
-                        var newTitle = doc.querySelector('title');
-                        if (newTitle) document.title = newTitle.textContent;
+                    // Update Page Title
+                    var newTitle = doc.querySelector('title');
+                    if (newTitle) document.title = newTitle.textContent;
 
-                        // Swap content
-                        var newMain = doc.getElementById('page-main');
-                        if (newMain) {
-                            main.innerHTML = newMain.innerHTML;
-                            main.className = newMain.className;
+                    // Swap content
+                    var newMain = doc.getElementById('page-main');
+                    if (newMain) {
+                        main.innerHTML = newMain.innerHTML;
+                        main.className = newMain.className;
+                    }
+
+                    // Update active state in nav menu
+                    updateActiveNavLinks();
+
+                    // Scroll to top instantly before fade in
+                    if (scrollToTop) {
+                        window.scrollTo({ top: 0, behavior: 'instant' });
+                    }
+
+                    // Fade in content
+                    setTimeout(function() {
+                        main.style.opacity = '1';
+                    }, 50);
+
+                    // Re-trigger scroll reveal animations and tilts
+                    if (typeof window.initUXEngine === 'function') {
+                        window.initUXEngine();
+                    }
+                    if (document.getElementById('ai-advisor')) {
+                        ensureDOMPurifyLoaded();
+                    }
+
+                    // Run page-specific logic and data-binding initializations
+                    checkSession();
+                    updateSubscriptionTracker();
+
+                    if (document.getElementById('student-dashboard') && typeof initStudentDashboard === 'function') {
+                        initStudentDashboard();
+                        if (typeof initDashboardToggle === 'function') initDashboardToggle();
+                        var rawOpen = localStorage.getItem('dt_dashboard_open');
+                        if (rawOpen === '1' && typeof setDashboardOpen === 'function') {
+                            setDashboardOpen(true, false);
                         }
+                    }
 
-                        // Update active state in nav menu
-                        updateActiveNavLinks();
-
-                        // Scroll to top instantly before fade in
-                        if (scrollToTop) {
-                            window.scrollTo({ top: 0, behavior: 'instant' });
+                    if (document.getElementById('search-inp') && typeof renderCareers === 'function') {
+                        if (typeof initCareerExplorerToggle === 'function') initCareerExplorerToggle();
+                        if (window.CAREERS && window.CAREERS.length > 0) {
+                            renderCareers();
+                        } else {
+                            loadCareersData().then(renderCareers);
                         }
+                    }
 
-                        // Fade in content
-                        setTimeout(function() {
-                            main.style.opacity = '1';
-                        }, 50);
+                    if (document.querySelector('.feat-grid') && typeof initFeatureShowcase === 'function') {
+                        initFeatureShowcase();
+                    }
+                }
 
-                        // Re-trigger scroll reveal animations and tilts
-                        if (typeof window.initUXEngine === 'function') {
-                            window.initUXEngine();
-                        }
-
-                        // Reinitialize Career Explorer dashboard if search is present on the page
-                        if (document.getElementById('search-inp') && typeof renderCareers === 'function') {
-                            if (window.CAREERS && window.CAREERS.length > 0) {
-                                renderCareers();
-                            } else {
-                                loadCareersData().then(renderCareers);
-                            }
-                        }
-                    })
-                    .catch(function(err) {
-                        console.error('AJAX navigation failed. Falling back to default reload.', err);
-                        window.location.href = url;
-                    });
+                if (PAGE_CACHE[url]) {
+                    renderContent(PAGE_CACHE[url]);
+                } else {
+                    fetch(url)
+                        .then(function(res) {
+                            if (!res.ok) throw new Error('Network error');
+                            return res.text();
+                        })
+                        .then(function(html) {
+                            PAGE_CACHE[url] = html;
+                            renderContent(html);
+                        })
+                        .catch(function(err) {
+                            console.error('AJAX navigation failed. Falling back to default reload.', err);
+                            window.location.href = url;
+                        });
+                }
             }
 
             function updateActiveNavLinks() {

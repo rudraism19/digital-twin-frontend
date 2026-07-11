@@ -12,6 +12,10 @@ export default defineConfig({
       '/parent': {
         target: 'http://localhost:5174',
         changeOrigin: true
+      },
+      '/school': {
+        target: 'http://localhost:5175',
+        changeOrigin: true
       }
     }
   },
@@ -21,9 +25,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
-        how: resolve(__dirname, 'how.html'),
-        dashboard: resolve(__dirname, 'dashboard.html'),
-        explorer: resolve(__dirname, 'explorer.html'),
+        features: resolve(__dirname, 'features.html'),
         advisor: resolve(__dirname, 'advisor.html'),
         reviews: resolve(__dirname, 'reviews.html'),
         pricing: resolve(__dirname, 'pricing.html'),
