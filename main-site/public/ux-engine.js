@@ -1,6 +1,7 @@
 // Optimized UX Engine with support for dynamic page transitions
 window.initUXEngine = function() {
-    const isMobile = window.innerWidth <= 768 || 'ontouchstart' in window;
+    // Better mobile detection that doesn't falsely flag touchscreen laptops as mobile
+    const isMobile = window.innerWidth <= 768 || (window.matchMedia("(any-hover: none)").matches);
 
     // --- 1. Custom Interactive Cursor (One-time init) ---
     const cursor = document.getElementById("cursor");
@@ -143,7 +144,7 @@ window.initUXEngine = function() {
 
     // --- 5. Spotlight Card Effect ---
     if (!isMobile) {
-        const spotlightCards = document.querySelectorAll('.feat-card, .auth-card, .dash-card, .glass-panel, .info-card, .step-card');
+        const spotlightCards = document.querySelectorAll('.feat-card, .auth-card, .dash-card, .glass-panel, .info-card, .step-card, .analyzer-card');
         spotlightCards.forEach(card => {
             if (card.dataset.spotlightInit) return;
             card.dataset.spotlightInit = "true";
@@ -183,7 +184,7 @@ window.initUXEngine = function() {
         const isAnalyzer = card.classList.contains('analyzer-card');
         
         card.addEventListener('mousemove', (e) => {
-            if (typeof gsap === 'undefined' || ('ontouchstart' in window)) return;
+            if (typeof gsap === 'undefined' || isMobile) return;
             const rect = card.getBoundingClientRect();
             const x = e.clientX - rect.left - rect.width / 2;
             const y = e.clientY - rect.top - rect.height / 2;
@@ -202,13 +203,13 @@ window.initUXEngine = function() {
             });
         });
         card.addEventListener('mouseleave', () => {
-            if (typeof gsap === 'undefined' || ('ontouchstart' in window)) return;
+            if (typeof gsap === 'undefined' || isMobile) return;
             gsap.to(card, { 
-                transformPerspective: 1200,
+                transformPerspective: isAnalyzer ? 1300 : 1200,
                 x: 0, 
                 y: 0, 
-                rotationY: 0, 
-                rotationX: 0,
+                rotationY: isAnalyzer ? -10 : 0, 
+                rotationX: isAnalyzer ? 8 : 0,
                 duration: 0.8, 
                 ease: 'elastic.out(1, 0.3)' 
             });
