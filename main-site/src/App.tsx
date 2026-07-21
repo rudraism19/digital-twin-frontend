@@ -11,6 +11,7 @@ import Reviews from './pages/Reviews';
 import Login from './pages/Login';
 import Explorer from './pages/Explorer';
 import Blog from './pages/Blog';
+import CareerGalaxy from './pages/CareerGalaxy';
 
 // Layout Components
 import Navbar from './components/Navbar';
@@ -65,6 +66,7 @@ const App = () => {
               <Route path="/login" element={<Login />} />
               <Route path="/explorer" element={<Explorer />} />
               <Route path="/blog" element={<Blog />} />
+              <Route path="/galaxy" element={<CareerGalaxy />} />
             </Routes>
           </MainLayout>
         } />
